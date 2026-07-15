@@ -29,8 +29,6 @@ struct CarDetailView: View {
                         .font(.headline)
                 }
                 .padding(.top)
-                
-                Divider()
 
                 NavigationLink {
 

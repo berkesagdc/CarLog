@@ -22,4 +22,17 @@ class FuelLog {
         self.liters = liters
         self.totalPrice = totalPrice
     }
+
+    var pricePerLiter: Double? {
+
+        guard
+            let liters = Double(liters),
+            let total = Double(totalPrice),
+            liters > 0
+        else {
+            return nil
+        }
+
+        return total / liters
+    }
 }

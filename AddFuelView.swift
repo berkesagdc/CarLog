@@ -53,6 +53,8 @@ struct AddFuelView: View {
                         )
 
                         fuel.car = car
+                        
+                        car.mileage = mileage
 
                         modelContext.insert(fuel)
 
