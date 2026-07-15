@@ -29,6 +29,18 @@ struct CarDetailView: View {
                         .font(.headline)
                 }
                 .padding(.top)
+                
+                Divider()
+
+                NavigationLink {
+
+                    FuelListView(car: car)
+
+                } label: {
+
+                    Label("Yakıt Geçmişi", systemImage: "fuelpump")
+                        .font(.headline)
+                }
             }
         }
         .navigationTitle("\(car.brand) \(car.model)")
