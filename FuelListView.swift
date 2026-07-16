@@ -1,38 +1,49 @@
 import SwiftUI
 import SwiftData
 
-private let fuelDateFormatter: DateFormatter = {
-
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "tr_TR")
-    formatter.calendar = Calendar(identifier: .gregorian)
-    formatter.dateFormat = "d MMMM yyyy"
-
-    return formatter
-}()
-
 struct FuelListView: View {
 
     let car: Car
 
-    var totalLiters: Double {
-        car.fuelLogs.reduce(0) { total, fuel in
-            total + (Double(fuel.liters) ?? 0)
-        }
-    }
-
-    var totalPrice: Double {
-        car.fuelLogs.reduce(0) { total, fuel in
-            total + (Double(fuel.totalPrice) ?? 0)
-        }
-    }
-
-    var totalLogs: Int {
-        car.fuelLogs.count
-    }
-
     @Environment(\.modelContext) private var modelContext
     @State private var showAddFuel = false
+
+    private var currentMonthFuelLogs: [FuelLog] {
+
+        let calendar = Calendar.current
+
+        return car.fuelLogs.filter {
+            calendar.isDate($0.date, equalTo: Date(), toGranularity: .month)
+        }
+    }
+
+    private var currentMonthTitle: String {
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "MMMM yyyy"
+
+        return formatter.string(from: Date()).capitalized
+    }
+
+    private var totalLiters: Double {
+
+        currentMonthFuelLogs.reduce(0) {
+            $0 + (Double($1.liters) ?? 0)
+        }
+    }
+
+    private var totalPrice: Double {
+
+        currentMonthFuelLogs.reduce(0) {
+            $0 + (Double($1.totalPrice) ?? 0)
+        }
+    }
+
+    private var totalLogs: Int {
+
+        currentMonthFuelLogs.count
+    }
 
     var body: some View {
 
@@ -52,47 +63,41 @@ struct FuelListView: View {
 
                     Section {
 
-                        VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 22) {
 
-                            Text("📊 Yakıt Özeti")
+                            Text("📊 \(currentMonthTitle) Yakıt Özeti")
                                 .font(.headline)
 
-                            HStack {
+                            VStack(alignment: .leading, spacing: 4) {
 
-                                VStack(alignment: .leading) {
+                                Text("Toplam Harcama")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
 
-                                    Text("Toplam Yakıt")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-
-                                    Text(String(format: "%.1f L", totalLiters))
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                }
-
-                                Spacer()
-
-                                VStack(alignment: .trailing) {
-
-                                    Text("Toplam Harcama")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-
-                                    Text(String(format: "%.0f ₺", totalPrice))
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                }
+                                Text(String(format: "%.0f ₺", totalPrice))
+                                    .font(.title2)
+                                    .fontWeight(.bold)
                             }
 
-                            Divider()
+                            VStack(alignment: .leading, spacing: 4) {
 
-                            HStack {
+                                Text("Toplam Yakıt")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+
+                                Text(String(format: "%.1f L", totalLiters))
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
 
                                 Text("Yakıt Kaydı")
-
-                                Spacer()
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
 
                                 Text("\(totalLogs)")
+                                    .font(.title2)
                                     .fontWeight(.bold)
                             }
                         }
@@ -127,10 +132,10 @@ struct FuelListView: View {
                     }
                     .onDelete { indexSet in
 
-                        for index in indexSet {
+                        let sortedFuelLogs = car.fuelLogs.sorted(by: { $0.date > $1.date })
 
-                            let fuel = car.fuelLogs.sorted(by: { $0.date > $1.date })[index]
-                            modelContext.delete(fuel)
+                        for index in indexSet {
+                            modelContext.delete(sortedFuelLogs[index])
                         }
 
                         try? modelContext.save()
