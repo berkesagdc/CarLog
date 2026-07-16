@@ -15,8 +15,23 @@ struct FuelListView: View {
 
     let car: Car
 
-    @Environment(\.modelContext) private var modelContext
+    var totalLiters: Double {
+        car.fuelLogs.reduce(0) { total, fuel in
+            total + (Double(fuel.liters) ?? 0)
+        }
+    }
 
+    var totalPrice: Double {
+        car.fuelLogs.reduce(0) { total, fuel in
+            total + (Double(fuel.totalPrice) ?? 0)
+        }
+    }
+
+    var totalLogs: Int {
+        car.fuelLogs.count
+    }
+
+    @Environment(\.modelContext) private var modelContext
     @State private var showAddFuel = false
 
     var body: some View {
@@ -35,24 +50,78 @@ struct FuelListView: View {
 
                 List {
 
-                    ForEach(car.fuelLogs.sorted(by: { $0.date > $1.date })) { fuel in
-                        
-                        VStack(alignment: .leading, spacing: 8) {
+                    Section {
 
-                            Text("\(fuel.liters) L")
+                        VStack(alignment: .leading, spacing: 16) {
+
+                            Text("📊 Yakıt Özeti")
                                 .font(.headline)
 
-                            Text("\(fuel.totalPrice) ₺")
-                                .foregroundStyle(.secondary)
-                            
+                            HStack {
+
+                                VStack(alignment: .leading) {
+
+                                    Text("Toplam Yakıt")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+
+                                    Text(String(format: "%.1f L", totalLiters))
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                }
+
+                                Spacer()
+
+                                VStack(alignment: .trailing) {
+
+                                    Text("Toplam Harcama")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+
+                                    Text(String(format: "%.0f ₺", totalPrice))
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                }
+                            }
+
+                            Divider()
+
+                            HStack {
+
+                                Text("Yakıt Kaydı")
+
+                                Spacer()
+
+                                Text("\(totalLogs)")
+                                    .fontWeight(.bold)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+
+                    ForEach(car.fuelLogs.sorted(by: { $0.date > $1.date })) { fuel in
+
+                        VStack(alignment: .leading, spacing: 8) {
+
+                            Label("\(fuel.liters) L", systemImage: "fuelpump.fill")
+                                .font(.headline)
+                                .foregroundStyle(.green)
+
+                            Label("\(fuel.totalPrice) ₺", systemImage: "turkishlirasign.circle.fill")
+                                .foregroundStyle(.orange)
+
                             if let price = fuel.pricePerLiter {
 
                                 Text(String(format: "%.2f ₺ / L", price))
-                                    .font(.caption)
+                                    .font(.body)
                                     .foregroundStyle(.blue)
                             }
 
                             Text("\(fuel.mileage) km")
+                                .foregroundStyle(.secondary)
+
+                            Text(fuel.date.formatted(date: .long, time: .omitted))
+                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -60,7 +129,8 @@ struct FuelListView: View {
 
                         for index in indexSet {
 
-                            modelContext.delete(car.fuelLogs[index])
+                            let fuel = car.fuelLogs.sorted(by: { $0.date > $1.date })[index]
+                            modelContext.delete(fuel)
                         }
 
                         try? modelContext.save()
@@ -91,6 +161,7 @@ struct FuelListView: View {
 }
 
 #Preview {
+
     FuelListView(
         car: Car(
             brand: "BMW",
