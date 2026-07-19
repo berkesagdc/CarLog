@@ -10,7 +10,14 @@ struct AddMaintenanceView: View {
 
     @State private var title = ""
     @State private var mileage = ""
+    @State private var repeatMileage = ""
     @State private var note = ""
+
+    private var formIsValid: Bool {
+        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
+        Int(mileage) != nil &&
+        Int(repeatMileage) != nil
+    }
 
     var body: some View {
 
@@ -23,13 +30,15 @@ struct AddMaintenanceView: View {
                     TextField("Örneğin: Yağ Değişimi", text: $title)
 
                     TextField("Kilometre", text: $mileage)
+                        .keyboardType(.numberPad)
+
+                    TextField("Tekrar Aralığı (km)", text: $repeatMileage)
+                        .keyboardType(.numberPad)
 
                     TextField("Not", text: $note)
                 }
             }
-
             .navigationTitle("Bakım Ekle")
-
             .toolbar {
 
                 ToolbarItem(placement: .topBarLeading) {
@@ -47,17 +56,19 @@ struct AddMaintenanceView: View {
                             title: title,
                             date: Date(),
                             mileage: mileage,
+                            repeatMileage: repeatMileage,
                             note: note
                         )
 
                         newMaintenance.car = car
-                        
+
                         modelContext.insert(newMaintenance)
-                        
+
                         try? modelContext.save()
 
                         dismiss()
                     }
+                    .disabled(!formIsValid)
                 }
             }
         }

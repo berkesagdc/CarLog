@@ -15,9 +15,13 @@ struct CarDetailView: View {
 
                 Label(car.plate, systemImage: "number")
 
-                Label("\(car.mileage) km", systemImage: "speedometer")
+                Label(Formatters.kilometer(car.mileage), systemImage: "speedometer")
 
                 Label(car.year, systemImage: "calendar")
+                
+                Label("\(car.fuelLogs.count) Yakıt Kaydı", systemImage: "fuelpump")
+
+                Label("\(car.maintenances.count) Bakım Kaydı", systemImage: "wrench.and.screwdriver")
 
                 NavigationLink {
 

@@ -6,7 +6,9 @@ struct FuelListView: View {
     let car: Car
 
     @Environment(\.modelContext) private var modelContext
+
     @State private var showAddFuel = false
+    @State private var fuelToDelete: FuelLog?
 
     private var currentMonthFuelLogs: [FuelLog] {
 
@@ -45,6 +47,11 @@ struct FuelListView: View {
         currentMonthFuelLogs.count
     }
 
+    private var averageConsumption: Double? {
+
+        FuelCalculator.averageConsumption(for: car.fuelLogs)
+    }
+
     var body: some View {
 
         Group {
@@ -74,9 +81,8 @@ struct FuelListView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
 
-                                Text(String(format: "%.0f ₺", totalPrice))
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                                Text(Formatters.currency(String(totalPrice)))
+                                    .font(.title2.bold())
                             }
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -86,8 +92,7 @@ struct FuelListView: View {
                                     .foregroundStyle(.secondary)
 
                                 Text(String(format: "%.1f L", totalLiters))
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                                    .font(.title2.bold())
                             }
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -97,8 +102,20 @@ struct FuelListView: View {
                                     .foregroundStyle(.secondary)
 
                                 Text("\(totalLogs)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                                    .font(.title2.bold())
+                            }
+
+                            if let averageConsumption {
+
+                                VStack(alignment: .leading, spacing: 4) {
+
+                                    Text("Ortalama Tüketim")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+
+                                    Text(Formatters.consumption(averageConsumption))
+                                        .font(.title2.bold())
+                                }
                             }
                         }
                         .padding(.vertical, 8)
@@ -112,33 +129,34 @@ struct FuelListView: View {
                                 .font(.headline)
                                 .foregroundStyle(.green)
 
-                            Label("\(fuel.totalPrice) ₺", systemImage: "turkishlirasign.circle.fill")
+                            Label(Formatters.currency(fuel.totalPrice),
+                                  systemImage: "turkishlirasign.circle.fill")
                                 .foregroundStyle(.orange)
 
                             if let price = fuel.pricePerLiter {
 
                                 Text(String(format: "%.2f ₺ / L", price))
-                                    .font(.body)
                                     .foregroundStyle(.blue)
                             }
 
-                            Text("\(fuel.mileage) km")
+                            Text(Formatters.kilometer(fuel.mileage))
                                 .foregroundStyle(.secondary)
 
                             Text(fuel.date.formatted(date: .long, time: .omitted))
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
-                    }
-                    .onDelete { indexSet in
+                        .swipeActions {
 
-                        let sortedFuelLogs = car.fuelLogs.sorted(by: { $0.date > $1.date })
+                            Button(role: .destructive) {
 
-                        for index in indexSet {
-                            modelContext.delete(sortedFuelLogs[index])
+                                fuelToDelete = fuel
+
+                            } label: {
+
+                                Label("Sil", systemImage: "trash")
+                            }
                         }
-
-                        try? modelContext.save()
                     }
                 }
             }
@@ -161,6 +179,31 @@ struct FuelListView: View {
         .sheet(isPresented: $showAddFuel) {
 
             AddFuelView(car: car)
+        }
+        .confirmationDialog(
+            "Bu yakıt kaydını silmek istediğinize emin misiniz?",
+            isPresented: Binding(
+                get: { fuelToDelete != nil },
+                set: { if !$0 { fuelToDelete = nil } }
+            )
+        ) {
+
+            Button("Sil", role: .destructive) {
+
+                if let fuelToDelete {
+
+                    modelContext.delete(fuelToDelete)
+
+                    try? modelContext.save()
+
+                    self.fuelToDelete = nil
+                }
+            }
+
+            Button("Vazgeç", role: .cancel) {
+
+                fuelToDelete = nil
+            }
         }
     }
 }

@@ -14,6 +14,14 @@ struct EditCarView: View {
     @State private var plate = ""
     @State private var mileage = ""
 
+    private var formIsValid: Bool {
+        !brand.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !model.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !year.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !plate.trimmingCharacters(in: .whitespaces).isEmpty &&
+        Int(mileage) != nil
+    }
+
     var body: some View {
 
         NavigationStack {
@@ -59,6 +67,7 @@ struct EditCarView: View {
 
                         dismiss()
                     }
+                    .disabled(!formIsValid)
                 }
             }
             .onAppear {
@@ -74,6 +83,5 @@ struct EditCarView: View {
 }
 
 #Preview {
-
     Text("Preview")
 }

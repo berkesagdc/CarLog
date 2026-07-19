@@ -12,6 +12,12 @@ struct AddFuelView: View {
     @State private var liters = ""
     @State private var totalPrice = ""
 
+    private var formIsValid: Bool {
+        Int(mileage) != nil &&
+        Double(liters) != nil &&
+        Double(totalPrice) != nil
+    }
+
     var body: some View {
 
         NavigationStack {
@@ -30,9 +36,7 @@ struct AddFuelView: View {
                         .keyboardType(.decimalPad)
                 }
             }
-
             .navigationTitle("Yakıt Ekle")
-
             .toolbar {
 
                 ToolbarItem(placement: .topBarLeading) {
@@ -53,7 +57,7 @@ struct AddFuelView: View {
                         )
 
                         fuel.car = car
-                        
+
                         car.mileage = mileage
 
                         modelContext.insert(fuel)
@@ -62,6 +66,7 @@ struct AddFuelView: View {
 
                         dismiss()
                     }
+                    .disabled(!formIsValid)
                 }
             }
         }

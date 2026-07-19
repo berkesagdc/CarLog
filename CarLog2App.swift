@@ -8,9 +8,12 @@ struct CarLog2App: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [
-            Car.self,
-            Maintenance.self
-        ])
+        .modelContainer(
+            for: [
+                Car.self,
+                Maintenance.self,
+                FuelLog.self
+            ]
+        )
     }
 }
